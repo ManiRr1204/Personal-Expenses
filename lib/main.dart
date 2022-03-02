@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import './chart.dart';
 import './sortBy.dart';
 
 void main() {
@@ -15,28 +17,6 @@ class PersonalExpenseApp extends StatefulWidget {
 enum SortByProperty { entry, date, price }
 
 class _PersonalExpenseAppState extends State<PersonalExpenseApp> {
-  // Future openDialog() => showDialog(
-  //       context: context,
-  //       builder: (context) => AlertDialog(
-  //         title: const Text('Item Name'),
-  //         content: const TextField(
-  //           decoration: InputDecoration(hintText: 'Enter your Item Name'),
-  //         ),
-  //         actions: [
-  //           TextButton(
-  //               onPressed: () {
-  //                 Navigator.pop(context);
-  //               },
-  //               child: const Text('Submit')
-  //               ),
-  //           TextButton(onPressed: () {
-  //                 Navigator.pop(context);
-  //               },
-  //               child: const Text('Cancel'))
-  //               ,
-  //         ],
-  //       ),
-  //     );
   bool _show = false;
   bool isDateChoosen = false;
   bool isTransactionAdded = false;
@@ -47,30 +27,51 @@ class _PersonalExpenseAppState extends State<PersonalExpenseApp> {
   bool isDateValid = true;
   bool isDubKey = false;
 
-  var expense = {
-    'shoes': {'price': 100, 'date': DateTime(2022, 2, 19)},
-    'shoes1': {'price': 90, 'date': DateTime(2022, 2, 13)},
-    'shoes2': {'price': 110, 'date': DateTime(2022, 2, 14)},
-    'shoes3': {'price': 170, 'date': DateTime(2022, 2, 19)},
-    'shoes4': {'price': 400, 'date': DateTime(2022, 2, 12)},
-    'shoes5': {'price': 230, 'date': DateTime(2022, 2, 12)},
-    'shoes6': {'price': 340, 'date': DateTime(2022, 2, 13)},
-    'shoes7': {'price': 10, 'date': DateTime(2022, 2, 21)},
-    'shoes8': {'price': 100, 'date': DateTime(2022, 2, 9)},
-    'shoes9': {'price': 1000, 'date': DateTime(2022, 2, 19)},
-  };
-  //Map<String, Map<String, dynamic>> expense = {};
+  // var expense = {
+  //   'shoes': {'price': 100, 'date': DateTime(2022, 2, 19)},
+  //   'shoes1': {'price': 90, 'date': DateTime(2022, 2, 13)},
+  //   'shoes2': {'price': 110, 'date': DateTime(2022, 2, 14)},
+  //   'shoes3': {'price': 170, 'date': DateTime(2022, 2, 19)},
+  //   'shoes4': {'price': 400, 'date': DateTime(2022, 2, 12)},
+  //   'shoes5': {'price': 230, 'date': DateTime(2022, 2, 12)},
+  //   'shoes6': {'price': 340, 'date': DateTime(2022, 2, 13)},
+  //   'shoes7': {'price': 10, 'date': DateTime(2022, 2, 21)},
+  //   'shoes8': {'price': 100, 'date': DateTime(2022, 2, 9)},
+  //   'shoes9': {'price': 1000, 'date': DateTime(2022, 2, 19)},
+  // };
+  Map<String, Map<String, dynamic>> expense = {};
 
   String initialValue = 'Entry';
   List<String> sortBylist = ['Entry', 'date', 'price', 'ItemName'];
   SortByProperty sortByProperty = SortByProperty.date;
-  TextEditingController _itemtitle = TextEditingController();
-  TextEditingController _itemamount = TextEditingController();
+  final TextEditingController _itemtitle = TextEditingController();
+  final TextEditingController _itemamount = TextEditingController();
+
+  bool validateAddTxnButton() {
+    if (_itemamount.text.isNotEmpty &&
+        _itemamount.text.isNotEmpty &&
+        _dateTime != null) {
+      return true;
+    }
+    return false;
+  }
+
+  bool validateClearButton() {
+    if (_itemtitle.text.isEmpty ||
+        _itemamount.text.isEmpty ||
+        _dateTime == null) {
+      return false;
+    }
+    return true;
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.purple,
+      ),
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Personal Expenses'),
@@ -78,8 +79,14 @@ class _PersonalExpenseAppState extends State<PersonalExpenseApp> {
             DropdownButton<String>(
                 value: initialValue,
                 items: sortBylist.map((items) {
-                  return DropdownMenuItem(value: items, child: Text(items));
+                  return DropdownMenuItem(
+                    value: items,
+                    child: Text(items, style: TextStyle(color: Colors.white, fontSize: 18),),
+                  );
                 }).toList(),
+                icon: const Icon(Icons.list),
+                iconEnabledColor: Colors.white,
+                dropdownColor: Colors.purple,
                 onChanged: (value) {
                   setState(() {
                     initialValue = value!;
@@ -106,15 +113,16 @@ class _PersonalExpenseAppState extends State<PersonalExpenseApp> {
           },
           child: Column(
             children: [
-              const SizedBox(
-                width: double.infinity,
-                height: 140,
-                child: Card(
-                  child: Align(
-                      alignment: Alignment.center,
-                      child: Text('Day vice Chart')),
-                ),
-              ),
+              // const SizedBox(
+              //   width: double.infinity,
+              //   height: 140,
+              //   child: Card(
+              //     child: Align(
+              //         alignment: Alignment.center,
+              //         child: Text('Day vice Chart')),
+              //   ),
+              // ),
+              Chart(expense),
               Expanded(
                   child: Scrollbar(
                       isAlwaysShown: false,
@@ -204,9 +212,11 @@ class _PersonalExpenseAppState extends State<PersonalExpenseApp> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(_dateTime == null
-                          ? 'No date Choosen!'
-                          : _dateTime.toString()),
+                      Text(
+                        _dateTime == null
+                            ? 'No date Choosen!'
+                            : 'Picked Date : ${DateFormat.yMd().format(_dateTime)}',
+                      ),
                       TextButton(
                         onPressed: () {
                           showDatePicker(
@@ -235,9 +245,23 @@ class _PersonalExpenseAppState extends State<PersonalExpenseApp> {
                     height: 10,
                   ),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      validateClearButton() == true
+                          ? ElevatedButton(
+                              onPressed: () {
+                                _itemtitle.clear();
+                                _itemamount.clear();
+                                _dateTime = null;
+                              },
+                              //style: ElevatedButton.styleFrom(primary: Colors.purple),
+                              child: Text('Clear Data'))
+                          : Container(),
                       ElevatedButton.icon(
+                        style: validateAddTxnButton()
+                            ? ElevatedButton.styleFrom(
+                                primary: Theme.of(context).primaryColor)
+                            : ElevatedButton.styleFrom(primary: Colors.grey),
                         onPressed: () {
                           setState(() {
                             _itemtitle.text.isEmpty
